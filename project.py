@@ -21,17 +21,56 @@ def detect_objects(image_path):
     thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                    cv2.THRESH_BINARY_INV, 11, 2)
     
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))  # Adjust kernel size as needed
+    closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+    
     # Find contours
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
+    # bounding_boxes = []
+    # for contour in contours:
+    #     # Filter out small contours based on area
+    #     if cv2.contourArea(contour) > 500:  # Adjust the threshold as needed
+    #         x, y, w, h = cv2.boundingRect(contour)
+    #         bounding_boxes.append((x, y, w, h))
+
     bounding_boxes = []
     for contour in contours:
         # Filter out small contours based on area
         if cv2.contourArea(contour) > 500:  # Adjust the threshold as needed
-            x, y, w, h = cv2.boundingRect(contour)
+            # Get the convex hull to better capture intricate shapes like forks
+            hull = cv2.convexHull(contour)
+            x, y, w, h = cv2.boundingRect(hull)  # Get bounding box of the convex hull
             bounding_boxes.append((x, y, w, h))
     
-    return image, bounding_boxes
+    merged_boxes = merge_close_boxes(bounding_boxes, merge_threshold=20)
+
+    # return image, bounding_boxes
+    return image, merged_boxes
+
+
+def merge_close_boxes(bounding_boxes, merge_threshold=20):
+    """
+    Merge bounding boxes that are close to each other.
+    """
+    merged = []
+    for box in bounding_boxes:
+        x, y, w, h = box
+        new_box = True
+        for i, (mx, my, mw, mh) in enumerate(merged):
+            # Check if boxes overlap or are close
+            if (x < mx + mw + merge_threshold and x + w > mx - merge_threshold and
+                y < my + mh + merge_threshold and y + h > my - merge_threshold):
+                # Merge boxes
+                merged[i] = (min(x, mx), min(y, my),
+                             max(x+w, mx+mw) - min(x, mx),
+                             max(y+h, my+mh) - min(y, my))
+                new_box = False
+                break
+        if new_box:
+            merged.append((x, y, w, h))
+    return merged
+
 
 def crop_and_classify(image, bounding_boxes, model):
     IMG_SIZE = 256  # Ensure it matches the model input size
@@ -80,7 +119,7 @@ def visualize_bounding_boxes(image, bounding_boxes):
     cv2.destroyAllWindows()
 
 
-image_path = "images/original_classes/choppingboard.jpg"
+image_path = "images/original_classes/spoon.jpg"
 
 # Detect objects and visualize results
 image, bounding_boxes = detect_objects(image_path)
