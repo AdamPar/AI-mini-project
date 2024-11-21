@@ -3,7 +3,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator, img_to_arra
 import numpy as np
 from PIL import Image
 
-# first convert image to grayscale 128x128, then generate images
+# first convert image to grayscale 256x256, then generate images
 
 def augment_images(input_image_path, output_dir, class_name, num_images, augment_params):
     """
@@ -19,8 +19,8 @@ def augment_images(input_image_path, output_dir, class_name, num_images, augment
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load the input image, convert to grayscale, and resize to 128x128 pixels
-    image = Image.open(input_image_path).convert("L").resize((128, 128))
+    # Load the input image, convert to grayscale, and resize to 256x256 pixels
+    image = Image.open(input_image_path).convert("L").resize((256, 256))
     image_array = img_to_array(image)
     image_array = image_array.reshape((1,) + image_array.shape)  # Reshape for data generator
 
@@ -42,11 +42,12 @@ def augment_images(input_image_path, output_dir, class_name, num_images, augment
     print(f"Successfully created {num_images} augmented images in {output_dir}.")
 
 if __name__ == "__main__":
-    # Define parameters directly in the script
-    input_image = "images/original_classes/fork.jpg"  # Path to your input image
-    output_dir = "images/dataset"  # Directory where augmented images will be saved
-    class_name = "spoon"  # Replace with the class name (e.g., 'cat', 'dog')
-    num_images = 20  # Number of augmented images to generate
+    # Define parameters
+    class_names = ["butterknife", "choppingboard", "fork", "grater", "knife",
+                   "ladle", "plate", "roller", "spatula", "spoon"]
+    input_dir = "images/original_classes"  # Directory containing the source images
+    output_dir = "images/dataset1"  # Directory where augmented images will be saved
+    num_images = 10  # Number of augmented images to generate
 
     # Augmentation parameters
     augmentation_parameters = {
@@ -60,11 +61,16 @@ if __name__ == "__main__":
         "brightness_range": (0.5, 1.5),  # Random brightness adjustment between 0.5 and 1.5
     }
 
-    # Call the function to augment images
-    augment_images(
-        input_image_path=input_image,
-        output_dir=output_dir,
-        class_name=class_name,
-        num_images=num_images,
-        augment_params=augmentation_parameters
-    )
+     # Iterate through each class name and generate augmented images
+    for class_name in class_names:
+        input_image = os.path.join(input_dir, f"{class_name}.jpg")  # Path to the input image
+        class_output_dir = os.path.join(output_dir, class_name)  # Separate output directory per class
+
+        # Call the function to augment images
+        augment_images(
+            input_image_path=input_image,
+            output_dir=class_output_dir,
+            class_name=class_name,
+            num_images=num_images,
+            augment_params=augmentation_parameters
+        )
