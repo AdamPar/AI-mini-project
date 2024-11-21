@@ -25,7 +25,7 @@ def detect_objects(image_path):
     closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
     
     # Find contours
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     # bounding_boxes = []
     # for contour in contours:
@@ -114,13 +114,38 @@ def visualize_bounding_boxes(image, bounding_boxes):
         cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
     
     # Show the image
-    cv2.imshow("Detected Objects", image)
+    # cv2.imshow("Detected Objects", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+
+    image_names = [
+    "butterknife", "choppingboard", "fork", "grater", "knife",
+    "ladle", "plate", "roller", "spatula", "spoon"]
+
+    # List to store processed images
+    processed_images = []
+
+    # Loop through the image list and process each image
+    for image_name in image_names:
+        image_path = f"images/original_classes/{image_name}.jpg"
+        
+        # Detect objects and get bounding boxes
+        image, bounding_boxes = detect_objects(image_path)
+        
+        # Visualize bounding boxes on the image
+        visualize_bounding_boxes(image, bounding_boxes)
+        
+        # Add processed image to the list
+        processed_images.append(image)
+
+    # Now we will combine all images into a single display
+    # Stack images horizontally or vertically
+    stacked_image = np.hstack(processed_images)  # Stack images vertically
+
+    # Display the stacked image
+    cv2.imshow("Detected Objects for All Images", stacked_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-
-image_path = "images/original_classes/spoon.jpg"
-
-# Detect objects and visualize results
-image, bounding_boxes = detect_objects(image_path)
-visualize_bounding_boxes(image, bounding_boxes)
