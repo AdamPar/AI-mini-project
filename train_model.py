@@ -15,24 +15,30 @@ import matplotlib.pyplot as plt
 
 # Set dataset path
 DATASET_DIR = 'images/dataset'
-IMG_SIZE = 128  # Already the correct size
+IMG_SIZE = 256
 
 # Step 1: Load and preprocess data
 def load_images():
     images = []
     labels = []
     
-    for filename in os.listdir(DATASET_DIR):
-        if filename.endswith('.jpg'):
-            # Extract label from filename
-            label = filename.split('_')[0]
-            
-            # Load image using OpenCV
-            filepath = os.path.join(DATASET_DIR, filename)
-            image = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)  # Load as grayscale
-            
-            images.append(image)
-            labels.append(label)
+    # Traverse each class folder
+    for class_name in os.listdir(DATASET_DIR):
+        class_dir = os.path.join(DATASET_DIR, class_name)
+        
+        if os.path.isdir(class_dir):  # Ensure it's a directory
+            for filename in os.listdir(class_dir):
+                if filename.endswith('.jpg'):  # Load only .jpg files
+                    filepath = os.path.join(class_dir, filename)
+                    
+                    # Load image as grayscale
+                    image = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+                    
+                    # Resize the image to IMG_SIZE x IMG_SIZE
+                    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+                    
+                    images.append(image)
+                    labels.append(class_name)  # Use folder name as label
 
     return np.array(images), np.array(labels)
 
@@ -63,9 +69,12 @@ def create_model():
         
         Conv2D(64, (3, 3), activation='relu'),
         MaxPooling2D((2, 2)),
+
+        Conv2D(128, (3, 3), activation='relu'),
+        MaxPooling2D((2, 2)),
         
         Flatten(),
-        Dense(128, activation='relu'),
+        Dense(256, activation='relu'),
         Dropout(0.5),
         Dense(len(label_encoder.classes_), activation='softmax')
     ])
@@ -98,7 +107,6 @@ def create_model():
 #         Dense(len(label_encoder.classes_), activation='softmax')
 #     ])
     
-#     # Compile the model with a lower learning rate
 #     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 #     return model
 
@@ -150,11 +158,11 @@ plot_history(history)
 
 
 # Save the entire model
-model.save('path_to_save_model/my_cnn_model.h5')
+model.save('trained_models/model_1.h5')
 
 
 # Save the label encoder
 with open('label_encoder.pkl', 'wb') as file:
     pickle.dump(label_encoder, file)
 
-# model.save('path_to_save_model/my_cnn_model', save_format='tf')
+# model.save('trained_models/model_1', save_format='tf')
