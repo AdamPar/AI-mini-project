@@ -1,12 +1,11 @@
 import cv2
 import numpy as np
+from tensorflow.keras.models import load_model
+import pickle
 
-# from tensorflow.keras.models import load_model
-# import pickle
-
-# model = load_model('trained_models/model_1.h5')
-# with open('label_encoder.pkl', 'rb') as file:
-#     label_encoder = pickle.load(file)
+model = load_model('trained_models/model_1.h5')
+with open('label_encoder.pkl', 'rb') as file:
+    label_encoder = pickle.load(file)
 
 def detect_objects(image_path):
     # Load and resize the image
@@ -27,13 +26,6 @@ def detect_objects(image_path):
     # Find contours
     contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
-    # bounding_boxes = []
-    # for contour in contours:
-    #     # Filter out small contours based on area
-    #     if cv2.contourArea(contour) > 500:  # Adjust the threshold as needed
-    #         x, y, w, h = cv2.boundingRect(contour)
-    #         bounding_boxes.append((x, y, w, h))
-
     bounding_boxes = []
     for contour in contours:
         # Filter out small contours based on area
@@ -86,25 +78,44 @@ def crop_and_classify(image, bounding_boxes, model):
         reshaped = np.expand_dims(normalized, axis=(0, -1))  # Add batch and channel dims
         
         # Predict using the model
-        # pred = model.predict(reshaped)
-        # predictions.append((box, np.argmax(pred, axis=1)))
+        pred = model.predict(reshaped)
+        predictions.append((box, np.argmax(pred, axis=1)))
     
-    # return predictions
+    return predictions
 
 
 def visualize_results(image, predictions, label_encoder):
     for box, pred_class in predictions:
         x, y, w, h = box
-        # label = label_encoder.inverse_transform([pred_class])[0]
+        label = label_encoder.inverse_transform([pred_class])[0]
         
         # Draw bounding box
         cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        # cv2.putText(image, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-    
+        
+        # Set text position inside the bounding box
+        text_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)[0]
+        text_w, text_h = text_size
+        text_x = x + (w - text_w) // 2  # Center the text horizontally within the box
+        text_y = y + (h + text_h) // 2  # Center the text vertically within the box
+
+        # Put label inside the bounding box
+        cv2.putText(image, label, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
     # Show the image
     cv2.imshow("Detected Objects", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+def process_and_predict_image(image_path, model, label_encoder):
+    # Step 1: Detect objects and get bounding boxes
+    image, bounding_boxes = detect_objects(image_path)
+    
+    # Step 2: Classify objects using the pre-trained model
+    predictions = crop_and_classify(image, bounding_boxes, model)
+    
+    # Step 3: Visualize the detection and classification results
+    visualize_results(image, predictions, label_encoder)
 
 
 def visualize_bounding_boxes(image, bounding_boxes):
@@ -119,8 +130,7 @@ def visualize_bounding_boxes(image, bounding_boxes):
     # cv2.destroyAllWindows()
 
 
-if __name__ == "__main__":
-
+def detectionTest():
     image_names = [
     "butterknife", "choppingboard", "fork", "grater", "knife",
     "ladle", "plate", "roller", "spatula", "spoon"]
@@ -141,11 +151,18 @@ if __name__ == "__main__":
         # Add processed image to the list
         processed_images.append(image)
 
-    # Now we will combine all images into a single display
-    # Stack images horizontally or vertically
     stacked_image = np.hstack(processed_images)  # Stack images vertically
 
     # Display the stacked image
     cv2.imshow("Detected Objects for All Images", stacked_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+
+if __name__ == "__main__":
+
+    image_path = "images/original_classes/spatula.jpg"  # Change this path as needed
+    
+    # Process the image, run prediction, and visualize results
+    process_and_predict_image(image_path, model, label_encoder)
