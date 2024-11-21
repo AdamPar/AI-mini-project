@@ -8,13 +8,13 @@ with open('label_encoder.pkl', 'rb') as file:
     label_encoder = pickle.load(file)
 
 def detect_objects(image_path):
-    # Load and resize the image
+    # Load and resize the image (to 256x256 grayscale)
     image = cv2.imread(image_path)
-    image = cv2.resize(image, (256, 256))
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+    image = cv2.resize(gray, (256, 256))  # Resize the grayscale image to 256x256
+
     # Apply Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    blurred = cv2.GaussianBlur(image, (5, 5), 0)
     
     # Use adaptive thresholding for better segmentation
     thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -37,7 +37,7 @@ def detect_objects(image_path):
     
     merged_boxes = merge_close_boxes(bounding_boxes, merge_threshold=20)
 
-    # return image, bounding_boxes
+    # Return the grayscale image (already resized) and the bounding boxes
     return image, merged_boxes
 
 
@@ -72,16 +72,16 @@ def crop_and_classify(image, bounding_boxes, model):
         x, y, w, h = box
         # Crop the object
         cropped = image[y:y+h, x:x+w]
-        gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-        resized = cv2.resize(gray, (IMG_SIZE, IMG_SIZE))  # Resize to match model input
-        normalized = resized / 255.0                     # Normalize
-        reshaped = np.expand_dims(normalized, axis=(0, -1))  # Add batch and channel dims
-        
+        resized = cv2.resize(cropped, (IMG_SIZE, IMG_SIZE))  # Resize to match model input size
+        normalized = resized / 255.0  # Normalize the image (convert to range 0-1)
+        reshaped = np.expand_dims(normalized, axis=(0, -1))  # Add batch and channel dims (e.g., (1, 256, 256, 1))
+
         # Predict using the model
         pred = model.predict(reshaped)
         predictions.append((box, np.argmax(pred, axis=1)))
     
     return predictions
+
 
 
 def visualize_results(image, predictions, label_encoder):
@@ -131,9 +131,6 @@ def visualize_bounding_boxes(image, bounding_boxes):
 
 
 def detectionTest():
-    image_names = [
-    "butterknife", "choppingboard", "fork", "grater", "knife",
-    "ladle", "plate", "roller", "spatula", "spoon"]
 
     # List to store processed images
     processed_images = []
@@ -159,10 +156,19 @@ def detectionTest():
     cv2.destroyAllWindows()
 
 
+# global image names
+image_names = [
+    "butterknife", "choppingboard", "fork", "grater", "knife",
+    "ladle", "plate", "roller", "spatula", "spoon"]
+
 
 if __name__ == "__main__":
 
-    image_path = "images/original_classes/spatula.jpg"  # Change this path as needed
-    
-    # Process the image, run prediction, and visualize results
-    process_and_predict_image(image_path, model, label_encoder)
+    image_dir = "images/original_classes/"
+
+    # Loop through each image name and process the corresponding image
+    for image_name in image_names:
+        image_path = f"{image_dir}{image_name}.jpg"  # Construct the full image path
+        
+        # Process the image, run prediction, and visualize results
+        process_and_predict_image(image_path, model, label_encoder)
