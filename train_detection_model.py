@@ -6,8 +6,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
-# Load data from image directories
-def load_images_and_labels_from_directory(image_dir):
+# Load data from image directories with limiting data per class
+def load_images_and_labels_from_directory(image_dir, max_detected=1000, max_empty=200):
     images = []
     labels = []
 
@@ -23,6 +23,12 @@ def load_images_and_labels_from_directory(image_dir):
 
         # List all image files in the subdirectory
         image_files = [f for f in os.listdir(full_path) if f.endswith(('.jpg', '.png', '.jpeg'))]
+
+        # Limit the number of images to the specified max values for each class
+        if label == 1:
+            image_files = image_files[:max_detected]
+        else:
+            image_files = image_files[:max_empty]
 
         for image_file in image_files:
             try:
@@ -88,6 +94,13 @@ def train_model(model, images, labels, epochs=10, batch_size=32):
         epochs=epochs,
         batch_size=batch_size
     )
+    
+    # Save the trained model
+    os.makedirs('trained_models', exist_ok=True)
+    model_path = os.path.join('trained_models', 'object_detection_model.h5')
+    model.save(model_path)
+    print(f"Model saved to {model_path}")
+
     return history, X_val, y_val
 
 # Evaluate model and print confusion matrix and classification report
