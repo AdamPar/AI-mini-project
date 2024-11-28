@@ -1,10 +1,14 @@
 import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers, losses
+from tensorflow.keras import Sequential
+from tensorflow.keras import layers
 import numpy as np
 import os
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
+import matplotlib.pyplot as plt
 
 # Load data from image directories with limiting data per class
 def load_images_and_labels_from_directory(image_dir, max_detected=1000, max_empty=200):
@@ -35,7 +39,7 @@ def load_images_and_labels_from_directory(image_dir, max_detected=1000, max_empt
                 # Load the image and preprocess it
                 image_path = os.path.join(full_path, image_file)
                 image = load_img(image_path, color_mode='grayscale', target_size=(256, 256))
-                image = img_to_array(image)
+                image = img_to_array(image) / 255.0  # Normalize pixel values to [0, 1]
 
                 # Append to the lists
                 images.append(image)
@@ -48,27 +52,30 @@ def load_images_and_labels_from_directory(image_dir, max_detected=1000, max_empt
 
 # Custom CNN model for object detection
 def build_model(input_shape=(256, 256, 1)):
-    inputs = layers.Input(shape=input_shape)
-
+    input_layer = layers.Input(shape=input_shape)
+    
     # Feature extraction
-    x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
+    x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(input_layer)
     x = layers.MaxPooling2D((2, 2))(x)
     x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
     x = layers.MaxPooling2D((2, 2))(x)
     x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
     x = layers.MaxPooling2D((2, 2))(x)
-
-    # Flatten and dense layers
     x = layers.Flatten()(x)
     x = layers.Dense(256, activation='relu')(x)
 
-    # Output: Binary classification (detected or not detected)
+    # Classification head (binary output)
     class_output = layers.Dense(1, activation='sigmoid', name='class_output')(x)
+    
+    # Bounding box head (4 continuous outputs)
+    bbox_output = layers.Dense(4, activation='linear', name='bbox_output')(x)
 
-    model = models.Model(inputs=inputs, outputs=class_output)
+    # Combine into a single model
+    model = models.Model(inputs=input_layer, outputs=[class_output, bbox_output])
     return model
 
-# Compile and train model
+
+# Compile and train model with class weights
 def train_model(model, images, labels, epochs=10, batch_size=32):
     # Split the data into training and validation sets
     X_train, X_val, y_train, y_val = train_test_split(
@@ -77,27 +84,36 @@ def train_model(model, images, labels, epochs=10, batch_size=32):
         random_state=42  # For reproducibility
     )
 
-    # Normalize the images
-    X_train, X_val = X_train / 255.0, X_val / 255.0
+    # Calculate class weights
+    class_weights = compute_class_weight('balanced', classes=np.unique(labels), y=labels)
+    class_weights_dict = dict(enumerate(class_weights))
+    print("Class weights:", class_weights_dict)
 
     # Compile the model
     model.compile(
-        optimizer=optimizers.Adam(learning_rate=0.001),
-        loss='binary_crossentropy',
-        metrics=['accuracy']
-    )
+    optimizer=optimizers.Adam(learning_rate=0.001),
+    loss={
+        'class_output': 'binary_crossentropy',  # Classification loss
+        'bbox_output': 'mse'  # Bounding box regression loss
+    },
+    metrics={
+        'class_output': 'accuracy',
+        'bbox_output': 'mse'  # Can use other metrics for bounding box
+    }
+)
 
     # Train the model
     history = model.fit(
         X_train, y_train,
         validation_data=(X_val, y_val),
         epochs=epochs,
-        batch_size=batch_size
+        batch_size=batch_size,
+        class_weight=class_weights_dict
     )
     
     # Save the trained model
     os.makedirs('trained_models', exist_ok=True)
-    model_path = os.path.join('trained_models', 'object_detection_model.h5')
+    model_path = os.path.join('trained_models', 'object_detection_model.keras')
     model.save(model_path)
     print(f"Model saved to {model_path}")
 
@@ -105,15 +121,32 @@ def train_model(model, images, labels, epochs=10, batch_size=32):
 
 # Evaluate model and print confusion matrix and classification report
 def evaluate_model(model, X_val, y_val):
-    y_pred = model.predict(X_val)
-    y_pred_classes = (y_pred > 0.5).astype(int)  # Convert probabilities to binary labels (0 or 1)
+    # Get predictions
+    y_pred_class, y_pred_bbox = model.predict(X_val)
 
-    # Print the confusion matrix and classification report
+    # Convert class probabilities to binary labels (0 or 1)
+    y_pred_classes = (y_pred_class > 0.5).astype(int)
+
+    # Print confusion matrix and classification report for classification output
     print("Confusion Matrix:")
     print(confusion_matrix(y_val, y_pred_classes))
-    
+
     print("\nClassification Report:")
     print(classification_report(y_val, y_pred_classes, target_names=['empty', 'detected']))
+
+    # For bounding box predictions, you can inspect y_pred_bbox
+    print("\nSample Bounding Box Predictions:")
+    print(y_pred_bbox[:5])  # Print the first 5 bounding box predictions
+
+# Plot some example images
+def plot_images(images, labels, class_names=['empty', 'detected'], num_rows=1, num_cols=5):
+    plt.figure(figsize=(15, 5))
+    for i in range(num_rows * num_cols):
+        plt.subplot(num_rows, num_cols, i + 1)
+        plt.imshow(images[i], cmap='gray')
+        plt.title(class_names[labels[i]])
+        plt.axis('off')
+    plt.show()
 
 # Example usage
 if __name__ == "__main__":
@@ -127,6 +160,9 @@ if __name__ == "__main__":
     print(f"Number of labels: {len(labels)}")
     print(f"Shape of images array: {images.shape}")
     print(f"Shape of labels array: {labels.shape}")
+
+    # Plot a few sample images to check data loading
+    plot_images(images[:10], labels[:10])
 
     # Build and train the model
     model = build_model()

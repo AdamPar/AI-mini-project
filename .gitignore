@@ -4,3 +4,5 @@ imageGeneratorSlow.py
 label_encoder.pkl
 trained_models
 original_classes_old
+images/dataset_detection
+images/dataset_detection_original
