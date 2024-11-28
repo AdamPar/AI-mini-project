@@ -1,6 +1,6 @@
 project_env
-yolov5
 images/dataset
 imageGeneratorSlow.py
 label_encoder.pkl
 trained_models
+original_classes_old

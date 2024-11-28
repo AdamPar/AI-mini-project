@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import pickle
 
-model = load_model('trained_models/model_1.h5')
+model = load_model('trained_models/model_1000.h5')
 with open('label_encoder.pkl', 'rb') as file:
     label_encoder = pickle.load(file)
 
@@ -72,6 +72,7 @@ def crop_and_classify(image, bounding_boxes, model):
         x, y, w, h = box
         # Crop the object
         cropped = image[y:y+h, x:x+w]
+
         resized = cv2.resize(cropped, (IMG_SIZE, IMG_SIZE))  # Resize to match model input size
         normalized = resized / 255.0  # Normalize the image (convert to range 0-1)
         reshaped = np.expand_dims(normalized, axis=(0, -1))  # Add batch and channel dims (e.g., (1, 256, 256, 1))
@@ -164,11 +165,20 @@ image_names = [
 
 if __name__ == "__main__":
 
-    image_dir = "images/original_classes/"
+    # TEST THE OBJECT CLASIFICATION ON ORIGINAL IMAGES
+    # image_dir = "images/original_classes/"
 
-    # Loop through each image name and process the corresponding image
-    for image_name in image_names:
-        image_path = f"{image_dir}{image_name}.jpg"  # Construct the full image path
+    # # Loop through each image name and process the corresponding image
+    # for image_name in image_names:
+    #     image_path = f"{image_dir}{image_name}.jpg"  # Construct the full image path
         
-        # Process the image, run prediction, and visualize results
-        process_and_predict_image(image_path, model, label_encoder)
+    #     # Process the image, run prediction, and visualize results
+    #     process_and_predict_image(image_path, model, label_encoder)
+
+    # TEST THE OBJECT DETECTION
+    # detectionTest()
+
+    # TEST THE OBJECT CLASIFICATION ON GENERATED IMAGES
+    process_and_predict_image("images/original_classes/knife.jpg", model, label_encoder)
+    # process_and_predict_image("images/original_classes/roller_1.jpg", model, label_encoder)
+    # process_and_predict_image("images/original_classes/roller_2.jpg", model, label_encoder)
