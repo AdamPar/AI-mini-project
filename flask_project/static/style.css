@@ -1,0 +1,77 @@
+/* General Reset */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    text-align: center;
+}
+
+/* Header Styling */
+h1 {
+    font-size: 2rem;
+    color: #444;
+    margin-bottom: 1rem;
+}
+
+/* Form Container */
+form {
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 400px;
+}
+
+/* Input File Styling */
+input[type="file"] {
+    display: block;
+    margin: 10px auto;
+    padding: 10px;
+    font-size: 1rem;
+}
+
+/* Button Styling */
+button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 20px; /* Adjust the value to create more space */
+    text-decoration: none;
+    color: #007BFF; /* Optional: Styling the link color */
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    form {
+        width: 95%;
+    }
+}

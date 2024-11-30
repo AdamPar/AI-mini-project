@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detection Results</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <h1>Detection Results</h1>
+    <p><strong>Detected Class:</strong> {{ detected_class }}</p>
+    <h2>Uploaded Image:</h2>
+    <img src="{{ uploaded_image }}" alt="Uploaded Image" width="300">
+    <h2>Image after detection:</h2>
+    <img src="{{ detected_image }}" alt="Image after detection" width="300">
+    <br><a href="/" class="back-link">Back to Upload</a>
+</body>
+</html>
