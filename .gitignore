@@ -1,8 +1,13 @@
+
 project_env
-images/dataset
+
 imageGeneratorSlow.py
+
 label_encoder.pkl
 trained_models
-original_classes_old
+
+# images
+images/dataset
 images/dataset_detection
 images/dataset_detection_original
+original_classes_old
