@@ -1,5 +1,6 @@
 tensorflow
 pillow
 scipy
-cikit-learn
+scikit-learn
 opencv-python
+flask
