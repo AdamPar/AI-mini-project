@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # Configuration
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -44,10 +44,12 @@ def upload_file():
         detected_image, detected_class = mock_detection(file_path)
 
         # Redirect to results page
-        return render_template('results.html', 
-                               uploaded_image=url_for('static', filename=f'uploads/{filename}'),
-                               detected_image=url_for('static', filename=f'uploads/{filename}'),
-                               detected_class=detected_class)
+        return render_template(
+            'results.html', 
+            uploaded_image=url_for('static', filename=f'uploads/{filename}'),
+            detected_image=url_for('static', filename=f'uploads/{filename}'),
+            detected_class=detected_class
+        )
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
