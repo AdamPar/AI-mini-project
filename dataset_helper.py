@@ -249,10 +249,10 @@ os.makedirs(output_folder_empty, exist_ok=True)
 
 def main():
     # create_upside_down_images(directory, 25)
-    # rename_class_files(base_directory, classes)
+    rename_class_files(base_directory, classes = ["empty"])
     # delete_all_images_from_dataset(dataset_directory, classes)
 
-    process_images_in_folder(input_folder_detected, output_folder_detected, 'detected', has_object=1)
+    # process_images_in_folder(input_folder_detected, output_folder_detected, 'detected', has_object=1)
     # process_images_in_folder(input_folder_empty, output_folder_empty, 'empty', has_object=0)
 
     # testDetection('images/dataset_detection_original/detected/choppingboard_61.jpg')
