@@ -8,6 +8,8 @@
 </head>
 <body>
     <h1>Kitchen Object Detector and Classifier</h1>
+    <h2>Recognizable Classes</h2>
+    <p>{{ classes | join(", ") }}</p>
     <h1>Upload Your Image</h1>
     <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="file" accept="image/jpeg">

@@ -64,6 +64,12 @@ button:hover {
     text-decoration: underline;
 }
 
+/* Detected Class Styling */
+.detected-class {
+    font-size: 2rem;
+    color: #007BFF;
+    margin: 1rem 0;
+}
 
 /* Responsive Design */
 @media (max-width: 600px) {
