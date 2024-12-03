@@ -91,7 +91,7 @@ model = create_model()
 history = model.fit(
     X_train, y_train,
     validation_data=(X_test, y_test),
-    epochs=10,
+    epochs=50,
     batch_size=32
 )
 
@@ -105,7 +105,7 @@ y_pred_classes = np.argmax(y_pred, axis=1)
 y_true_classes = np.argmax(y_test, axis=1)
 
 # Step 6: Confusion Matrix
-def plot_confusion_matrix(y_true, y_pred, class_names):
+def plot_confusion_matrix(y_true, y_pred, class_names, save_dir='images/model_stats'):
     """
     Plots a confusion matrix using seaborn heatmap.
 
@@ -121,14 +121,19 @@ def plot_confusion_matrix(y_true, y_pred, class_names):
     plt.xlabel('Predicted')
     plt.ylabel('True')
     plt.title('Confusion Matrix')
+    loss_plot_path = os.path.join(save_dir, 'confusion_matrix.png')
+    plt.savefig(loss_plot_path)
+
     plt.show()
 
 
 plot_confusion_matrix(y_true_classes, y_pred_classes, label_encoder.classes_)
 print(classification_report(y_true_classes, y_pred_classes, target_names=label_encoder.classes_))
 
-def plot_history(history):
+def plot_history(history, save_dir='images/model_stats'):
     # Accuracy plot
+    os.makedirs(save_dir, exist_ok=True)
+
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 2, 1)
     plt.plot(history.history['accuracy'], label='Train Accuracy')
@@ -137,6 +142,8 @@ def plot_history(history):
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.legend()
+    accuracy_plot_path = os.path.join(save_dir, 'accuracy_plot.png')
+    plt.savefig(accuracy_plot_path)
 
     # Loss plot
     plt.subplot(1, 2, 2)
@@ -146,6 +153,8 @@ def plot_history(history):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
+    loss_plot_path = os.path.join(save_dir, 'loss_plot.png')
+    plt.savefig(loss_plot_path)
 
     plt.show()
 
@@ -154,7 +163,7 @@ plot_history(history)
 
 # Save the entire model
 # model.save('trained_models/model_1.h5')
-model.save('trained_models/model_1.keras')
+model.save('trained_models/model_50_epochs.keras')
 
 
 # Save the label encoder

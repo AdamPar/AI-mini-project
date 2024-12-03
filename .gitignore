@@ -11,3 +11,8 @@ images/dataset
 images/dataset_detection
 images/dataset_detection_original
 original_classes_old
+
+flask_project/models/*
+flask_project/static/preprocessed/*
+flask_project/static/uploads/*
+
