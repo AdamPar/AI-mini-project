@@ -2,6 +2,8 @@ from PIL import Image
 import os
 import cv2
 import matplotlib.pyplot as plt
+import shutil
+
 
 
 def create_upside_down_images(directory, limit=25):
@@ -218,25 +220,156 @@ def testDetection(image_path):
     plt.axis('off')  # Hide axes
     plt.show()
 
-# use haar cascade classifiers
+import os
+import shutil
+
+def create_directories(base_dir):
+    """
+    Create 'positives' and 'negatives' directories within the base directory if they don't exist.
+    """
+    positive_dir = os.path.join(base_dir, 'positives')
+    negative_dir = os.path.join(base_dir, 'negatives')
+
+    if not os.path.exists(positive_dir):
+        os.makedirs(positive_dir)
+        print(f"Created directory: {positive_dir}")
+    if not os.path.exists(negative_dir):
+        os.makedirs(negative_dir)
+        print(f"Created directory: {negative_dir}")
+
+    return positive_dir, negative_dir
+
+import os
+import shutil
+
+def move_files_to_directories(source_dir, positive_dir, negative_dir):
+    """
+    Move images to 'positives' and 'negatives' directories based on their naming convention.
+    """
+    for filename in os.listdir(source_dir):
+        print(f"Checking filename: {filename}")  # Debug statement
+        if filename.startswith("object_"):
+            # Split the filename to separate the extension
+            base_name, ext = os.path.splitext(filename)
+            parts = base_name.split('_')
+            print(f"Filename parts: {parts}")  # Debug statement to show all parts
+
+            # Ensure the filename has the expected parts (label, index, coordinates)
+            if len(parts) >= 7:  # Check the number of parts in the filename
+                label = parts[1]
+                print(f"Detected object type (parts[1]): {label}")  # Debug statement to show parts[1]
+
+                # Check if it's a positive sample (object detected)
+                if label == '1':
+                    src_path = os.path.join(source_dir, filename)
+                    dest_path = os.path.join(positive_dir, filename)
+                    print(f"Moving positive sample from {src_path} to {dest_path}")  # Debug statement
+                    try:
+                        shutil.move(src_path, dest_path)
+                    except Exception as e:
+                        print(f"Error moving {filename}: {e}")
+                # Check if it's a negative sample (no object detected)
+                elif label == '0':
+                    src_path = os.path.join(source_dir, filename)
+                    dest_path = os.path.join(negative_dir, filename)
+                    print(f"Moving negative sample from {src_path} to {dest_path}")  # Debug statement
+                    try:
+                        shutil.move(src_path, dest_path)
+                    except Exception as e:
+                        print(f"Error moving {filename}: {e}")
+            else:
+                print(f"Skipping invalid filename format: {filename}")
+
+
+
+def generate_positive_annotations(directory, output_file):
+    """
+    Generate annotations for positive samples in the dataset.
+    """
+    with open(output_file, 'w') as f:
+        for filename in os.listdir(directory):
+            # Print debugging information for filenames
+            print(f"Checking filename: {filename}")
+
+            if filename.startswith("object_") and filename.endswith(('.jpg', '.jpeg', '.png')):
+                parts = filename.split('_')
+                print(f"Filename parts: {parts}")  # Debug statement to show parsed parts
+
+                # Ensure that the filename format is correct and has at least 7 parts
+                if len(parts) >= 7:
+                    label = parts[1]
+                    if label == '1':  # Only include positive samples
+                        # Get the coordinates and image path
+                        x1 = int(parts[3])
+                        y1 = int(parts[4])
+                        w = int(parts[5])
+                        h = int(parts[6].split('.')[0])  # Remove file extension from the last part
+
+                        image_path = os.path.join(directory, filename)
+                        # Write the annotation to the file
+                        f.write(f"{image_path} {x1} {y1} {w} {h}\n")
+                        print(f"Writing to positives.txt: {image_path} {x1} {y1} {w} {h}")
+                else:
+                    print(f"Skipping invalid filename format: {filename}")
+    print(f"Positive annotations saved to {output_file}")
+
+def generate_negative_list(directory, output_file):
+    """
+    Generate a list of paths for negative samples in the dataset.
+    """
+    with open(output_file, 'w') as f:
+        for filename in os.listdir(directory):
+            print(f"Processing negative sample: {filename}")  # Debug statement
+            if filename.endswith(('.png', '.jpg', '.jpeg')):  # Add additional extensions if needed
+                image_path = os.path.join(directory, filename)
+                print(f"Writing to negatives.txt: {image_path}")  # Debug statement
+                f.write(f"{image_path}\n")
+    print(f"Negative list saved to {output_file}")
+
+def process_dataset(source_dir, base_output_dir, pos_output, neg_output):
+    """
+    Process the dataset to create directories and prepare annotation files.
+    """
+    # Create positive and negative directories
+    # positive_dir, negative_dir = create_directories(base_output_dir)
+
+    # Move files to appropriate directories
+    # print("Moving images to respective directories...")
+    # move_files_to_directories(source_dir, positive_dir, negative_dir)
+
+    # Generate the positive annotations file
+    print("Generating positive annotations...")
+    generate_positive_annotations("images/dataset_detection/positives", pos_output)
+
+    # Generate the negative list file
+    # print("Generating negative list...")
+    # generate_negative_list(negative_dir, neg_output)
+
+# Usage
+source_directory = "images/dataset_detection/objects"
+base_output_directory = "images/dataset_detection"
+positive_output_file = os.path.join(base_output_directory, "positives.txt")
+negative_output_file = os.path.join(base_output_directory, "negatives.txt")
+
 
 # ---------------------- variables:
 # Specify the directory containing the images
-directory = 'images/original_classes/empty'
+# directory = 'images/original_classes/empty'
 
-base_directory = 'images/original_classes'
-classes = ["butterknife", "choppingboard", "fork", "grater", "knife", "ladle", "plate", "roller", "spatula", "spoon"]
+# base_directory = 'images/original_classes'
+# classes = ["butterknife", "choppingboard", "fork", "grater", "knife", "ladle", "plate", "roller", "spatula", "spoon"]
 
-#deletion dir
-dataset_directory = 'images/dataset'
+# #deletion dir
+# dataset_directory = 'images/dataset'
 
-# apply bounding boxes to images
-input_folder_detected = 'images/dataset_detection_original/objects'
-output_folder_detected = 'images/dataset_detection/objects'
-os.makedirs(output_folder_detected, exist_ok=True)
+# # apply bounding boxes to images
+# input_folder_detected = 'images/dataset_detection_original/objects'
+# output_folder_detected = 'images/dataset_detection/objects'
+# os.makedirs(output_folder_detected, exist_ok=True)
 
 def main():
-    process_images_in_folder(input_folder_detected, output_folder_detected, 'object')
+    # process_images_in_folder(input_folder_detected, output_folder_detected, 'object')
+    process_dataset(source_directory, base_output_directory, positive_output_file, negative_output_file)
 
     # create_upside_down_images(directory, 25)
     # rename_class_files(base_directory, classes = ["empty"])
