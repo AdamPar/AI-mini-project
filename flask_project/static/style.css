@@ -71,6 +71,31 @@ button:hover {
     margin: 1rem 0;
 }
 
+.available-classes {
+    font-size: 1.5rem;
+    color: #007BFF;
+    margin: 1rem 0;
+}
+
+.statistics {
+    display: block; /* Stack elements vertically */
+    margin-top: 2rem;
+}
+
+.stat-item {
+    margin-bottom: 2rem; /* Add space between each item */
+    text-align: center; /* Center-align the content */
+}
+
+.stat-item img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
 /* Responsive Design */
 @media (max-width: 600px) {
     h1 {

@@ -8,12 +8,26 @@
 </head>
 <body>
     <h1>Kitchen Object Detector and Classifier</h1>
-    <h2>Recognizable Classes</h2>
-    <p>{{ classes | join(", ") }}</p>
+    <h2>Recognizable Classes:</h2>
+    <p>
+        <span class="available-classes">{{ classes | join(", ") }}</span>
+    </p>
     <h1>Upload Your Image</h1>
     <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="file" accept="image/jpeg">
         <button type="submit">Upload</button>
     </form>
+
+    <h2>Model Statistics:</h2>
+    <div class="statistics">
+        <div class="stat-item">
+            <h3>Performance Metrics (Accuracy & Loss) of the model</h3>
+            <img src="{{ url_for('static', filename='statistics/acc_loss_50_epochs.png') }}" alt="Accuracy and Loss Graph">
+        </div>
+        <div class="stat-item">
+            <h3>Confusion Matrix of the model</h3>
+            <img src="{{ url_for('static', filename='statistics/cm_50_epochs.png') }}" alt="Confusion Matrix">
+        </div>
+    </div>
 </body>
 </html>

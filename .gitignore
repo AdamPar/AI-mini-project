@@ -4,6 +4,7 @@ project_env
 imageGeneratorSlow.py
 
 label_encoder.pkl
+#trained models are to large to upload to git
 trained_models
 
 # images

@@ -162,7 +162,6 @@ plot_history(history)
 
 
 # Save the entire model
-# model.save('trained_models/model_1.h5')
 model.save('trained_models/model_50_epochs.keras')
 
 
@@ -170,5 +169,5 @@ model.save('trained_models/model_50_epochs.keras')
 with open('label_encoder.pkl', 'wb') as file:
     pickle.dump(label_encoder, file)
 
-# model.save('trained_models/model_1', save_format='tf')
+
 

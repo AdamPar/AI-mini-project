@@ -151,9 +151,15 @@ def draw_bounding_boxes(image, bounding_boxes):
         cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
     return image
 
-def process_images_in_folder(input_folder, output_folder, class_name, has_object=1):
+def process_images_in_folder(input_folder, output_folder, class_name):
+    # Ensure the output folder exists
+    os.makedirs(output_folder, exist_ok=True)
+
+    # List of image files in the input folder
     image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.png', '.jpeg'))]
-    image_index = {}  # Dictionary to track the index for each set of coordinates
+    
+    # Dictionary to track the index for each class
+    image_index = {}
 
     for image_file in image_files:
         image_path = os.path.join(input_folder, image_file)
@@ -163,51 +169,34 @@ def process_images_in_folder(input_folder, output_folder, class_name, has_object
             print(f"Error reading image: {image_file}")
             continue
         
-        # Increment the index for the current class
+        # Initialize index for the class if not already present
         if class_name not in image_index:
             image_index[class_name] = 0  # Start index from 0 for each class
         
         index = image_index[class_name]
         image_index[class_name] += 1  # Increment the index after processing each image
-
-        # Check if we are processing the 'empty' class
-        if class_name == 'empty':
-            # Rename the image with no object detection
-            new_filename = f"{class_name}_0_{index}_0_0_0_0.jpg"
-            
-            # Save the image without drawing bounding boxes
-            output_path = os.path.join(output_folder, new_filename)
-            cv2.imwrite(output_path, image)
-            
-            print(f"Processed and saved {new_filename}")
         
+        # Detect objects and get bounding boxes
+        bounding_boxes = detect_objects(image_path)  # Replace with your object detection function
+        
+        if bounding_boxes:
+            # Assuming we use the first bounding box if multiple are detected
+            x1, y1, w, h = bounding_boxes[0]  # (x, y, w, h)
+            x2, y2 = x1 + w, y1 + h  # Bottom-right coordinates
+            # Create a new filename with the class name, presence flag, index, and coordinates
+            new_filename = f"{class_name}_1_{index}_{x1}_{y1}_{x2}_{y2}.jpg"
+            # image_with_boxes = draw_bounding_boxes(image, bounding_boxes)
+            image_with_boxes = image  # If no drawing is needed, use the original image
         else:
-            # Detect objects and get bounding boxes for non-empty classes
-            bounding_boxes = detect_objects(image_path)
-            
-            if bounding_boxes:
-                # Assuming only one object per image, use the first bounding box
-                x1, y1, w, h = bounding_boxes[0]  # (x, y, w, h)
-                coordinates = (x1, y1, x1 + w, y1 + h)  # Adjust coordinates to (x1, y1, x2, y2)
-                
-                # Create a new filename with the class name, presence flag, index, and coordinates
-                new_filename = f"{class_name}_{has_object}_{index}_{x1}_{y1}_{x1 + w}_{y1 + h}.jpg"
-                
-                # Draw the bounding boxes on the image
-                image_with_boxes = draw_bounding_boxes(image, bounding_boxes)
-                
-            else:
-                # No object detected, set coordinates to 0 and index to 0
-                new_filename = f"{class_name}_0_{index}_0_0_0_0.jpg"
-                
-                # Set image_with_boxes to be the original image with no changes
-                image_with_boxes = image
-            
-            # Save the output image with bounding boxes (or original image for empty cases)
-            output_path = os.path.join(output_folder, new_filename)
-            cv2.imwrite(output_path, image_with_boxes)
-            
-            print(f"Processed and saved {new_filename}")
+            # No bounding boxes detected, set coordinates to zero
+            new_filename = f"{class_name}_0_{index}_0_0_0_0.jpg"
+            image_with_boxes = image  # Use the original image
+
+        # Save the output image
+        output_path = os.path.join(output_folder, new_filename)
+        cv2.imwrite(output_path, image_with_boxes)
+        
+        print(f"Processed and saved {new_filename}")
 
 
 def testDetection(image_path):
@@ -229,6 +218,7 @@ def testDetection(image_path):
     plt.axis('off')  # Hide axes
     plt.show()
 
+# use haar cascade classifiers
 
 # ---------------------- variables:
 # Specify the directory containing the images
@@ -237,24 +227,21 @@ directory = 'images/original_classes/empty'
 base_directory = 'images/original_classes'
 classes = ["butterknife", "choppingboard", "fork", "grater", "knife", "ladle", "plate", "roller", "spatula", "spoon"]
 
+#deletion dir
 dataset_directory = 'images/dataset'
 
-input_folder_detected = 'images/dataset_detection_original/detected'
-input_folder_empty = 'images/dataset_detection_original/empty'
-
-output_folder_detected = 'images/dataset_detection/detected'
-output_folder_empty = 'images/dataset_detection/empty'
+# apply bounding boxes to images
+input_folder_detected = 'images/dataset_detection_original/objects'
+output_folder_detected = 'images/dataset_detection/objects'
 os.makedirs(output_folder_detected, exist_ok=True)
-os.makedirs(output_folder_empty, exist_ok=True)
 
 def main():
+    process_images_in_folder(input_folder_detected, output_folder_detected, 'object')
+
     # create_upside_down_images(directory, 25)
-    rename_class_files(base_directory, classes = ["empty"])
+    # rename_class_files(base_directory, classes = ["empty"])
     # delete_all_images_from_dataset(dataset_directory, classes)
-
-    # process_images_in_folder(input_folder_detected, output_folder_detected, 'detected', has_object=1)
     # process_images_in_folder(input_folder_empty, output_folder_empty, 'empty', has_object=0)
-
     # testDetection('images/dataset_detection_original/detected/choppingboard_61.jpg')
 
 
